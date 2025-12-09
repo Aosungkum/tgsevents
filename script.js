@@ -69,70 +69,66 @@ faqQuestions.forEach(question => {
 });
 
 // ========================================
-// CONTACT FORM SUBMISSION & MODAL
+// 4. CONTACT FORM & POPUP (The Speed Hack)
 // ========================================
 const contactForm = document.getElementById('contactForm');
-const formMessage = document.getElementById('formMessage');
 const btnText = document.querySelector('.btn-text');
 const btnLoader = document.querySelector('.btn-loader');
+const formMessage = document.getElementById('formMessage');
 
 // Modal Elements
 const successModal = document.getElementById('successModal');
 const closeModal = document.querySelector('.close-modal');
 const closeBtn = document.querySelector('.close-btn');
 
-// Replace this with your actual Google Apps Script Web App URL
+// Your Google Script URL
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyAId62Kd0_fEsMUTk4-i3rBEL6ykNF_Yfiyu432M4NskMhL9ZEuH_5AIMA50stheHd/exec';
 
-contactForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    // Show loading state
-    btnText.style.display = 'none';
-    btnLoader.style.display = 'inline-block';
-    formMessage.style.display = 'none';
-    
-    // Collect form data
-    const formData = {
-        name: document.getElementById('name').value,
-        phone: document.getElementById('phone').value,
-        eventDate: document.getElementById('eventDate').value,
-        guestCount: document.getElementById('guestCount').value,
-        budget: document.getElementById('budget').value,
-        venue: document.getElementById('venue').value,
-        timestamp: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })
-    };
-    
-    try {
-        // Send data to Google Apps Script
-        const response = await fetch(GOOGLE_SCRIPT_URL, {
+if (contactForm) {
+    contactForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        // 1. Show Loading State immediately
+        if(btnText) btnText.style.display = 'none';
+        if(btnLoader) btnLoader.style.display = 'inline-block';
+        if(formMessage) formMessage.style.display = 'none';
+        
+        // 2. Collect form data
+        const formData = {
+            name: document.getElementById('name').value,
+            phone: document.getElementById('phone').value,
+            eventDate: document.getElementById('eventDate').value,
+            guestCount: document.getElementById('guestCount').value,
+            budget: document.getElementById('budget').value,
+            venue: document.getElementById('venue').value,
+            timestamp: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })
+        };
+        
+        // 3. Send to Google Sheets in BACKGROUND (Don't wait for it)
+        fetch(GOOGLE_SCRIPT_URL, {
             method: 'POST',
             mode: 'no-cors',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(formData)
-        });
-        
-        // Reset form
-        contactForm.reset();
-        
-        // Show Success Popup (Modal)
-        successModal.classList.add('show');
-        
-    } catch (error) {
-        console.error('Error:', error);
-        
-        // Show error message inline (keep this inline for errors)
-        formMessage.textContent = '✗ Something went wrong. Please try again or contact us directly via WhatsApp.';
-        formMessage.className = 'form-message error';
-        formMessage.style.display = 'block';
-    } finally {
-        // Reset button state
-        btnText.style.display = 'inline-block';
-        btnLoader.style.display = 'none';
-    }
-});
+        }).catch(error => console.error('Background Error:', error));
+
+        // 4. THE 1-SECOND TIMER (Force Success)
+        setTimeout(() => {
+            // Reset the form
+            contactForm.reset();
+            
+            // Reset the button
+            if(btnText) btnText.style.display = 'inline-block';
+            if(btnLoader) btnLoader.style.display = 'none';
+
+            // Show the Success Popup
+            if(successModal) successModal.classList.add('show');
+            
+        }, 1000); // 1 Second wait
+    });
+}
 
 // Modal Closing Logic
 function hideModal() {
